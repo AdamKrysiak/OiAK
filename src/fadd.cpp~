@@ -6,7 +6,6 @@
 int fadd(float a, float b)
 {
 	float float_score = a+b;
-	
 	// a has to be bigger
 	unsigned int _a;
 	unsigned int _b;
