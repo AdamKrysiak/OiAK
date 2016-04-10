@@ -23,43 +23,23 @@ int fdiv(float a, float b)	{
 	unsigned int result = 0;
 	
 	// adding exponents
-	unsigned int exp_c = exp_a + exp_b - 127;
+	unsigned int exp_c = exp_a - exp_b + 127;
 	
 	// signs xor
 	unsigned int sign_c = sign_a ^ sign_b;
 	
 	// multiply mantissas
-	unsigned long long man_c = ( (long long)(man_a) << 23 ) / (long long)(man_b);
-	// check if result is denormalized
-	// shift through 46 bits(place of the point)
-	if((man_c>>46) > 1)	
-	{
-		// if it's denormalized
-		unsigned long long man_copy = man_c>>46;
+	unsigned long long man_c = ( ( (long long)(man_a) << 23 ) / ( (long long)(man_b) ) << 23 ) >> 23;
+	std::cout<<"man_a:         "<<std::bitset<64>( (long long)(man_a) << 23 )<<std::endl;
+	std::cout<<"man_b:         "<<std::bitset<64>( (long long)(man_b) << 23 )<<std::endl;
+	std::cout<<"man_c:         "<<std::bitset<64>(man_c)<<std::endl;
 	
-		// add 1 to exponent
-		exp_c += 1;
-		// check if exponent is ok
-		if (exp_c > 255 || exp_c < 0)	{
-			// bad result, throw exception
-		}
-		// shift exponent to the right place
-		exp_c = exp_c << 23;
-		
-		// shift result to the right
-		// add +1 as we normalize
-		man_c = ( man_c >> (23 + 1) );
-		// subtract the hidden bit
-		man_c = man_c ^ 0b00000000100000000000000000000000;
-	}
-	else	{
-		//if it's normalized then just shift right
-		man_c = man_c >> 23;
-		// shift exponent to the right place
-		exp_c = exp_c << 23;
-		// subtract the hidden bit
-		man_c = man_c ^ 0b00000000100000000000000000000000;
-	}
+	// subtract the hidden bit
+	man_c = man_c ^ 0b00000000100000000000000000000000;
+	std::cout<<"man_c:         "<<std::bitset<64>(man_c)<<std::endl;
+	
+	std::cout<<"exp_c:         "<<std::bitset<32>(exp_c)<<std::endl;
+	exp_c = exp_c << 23;
 	
 	// put the result together
 	result = result | *reinterpret_cast<int*>(&man_c);
@@ -75,6 +55,8 @@ int fdiv(float a, float b)	{
 	std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
 	
 	std::cout<<"resultFloat:   "<<*reinterpret_cast<float*>(&result)<<std::endl;
-	std::cout<<"floatFPU:      "<<a*b<<std::endl;
+	float c = a / b;
+	std::cout<<"floatBinary:   "<<std::bitset<32>(*reinterpret_cast<int*>(&c))<<std::endl;
+	std::cout<<"floatFPU:      "<<a/b<<std::endl;
 	return result;
 }
