@@ -56,7 +56,7 @@ int fdiv(float a, float b)	{
 	result = result | sign_c;
 	result = result | exp_c;
 	
-	std::cout<<"mantysa        "<<std::bitset<32>(0b01111111100000000000000000000000)<<std::endl;
+	/*std::cout<<"mantysa        "<<std::bitset<32>(0b01111111100000000000000000000000)<<std::endl;
 	std::cout<<"exponenta      "<<std::bitset<32>(0b00000000011111111111111111111111)<<std::endl;
 	std::cout<<"_a:            "<<std::bitset<32>(_a)<<std::endl;
 	std::cout<<"_b:            "<<std::bitset<32>(_b)<<std::endl;
@@ -65,6 +65,6 @@ int fdiv(float a, float b)	{
 	std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
 	
 	std::cout<<"resultFloat:   "<<*reinterpret_cast<float*>(&result)<<std::endl;
-	std::cout<<"floatFPU:      "<<a/b<<std::endl;
+	std::cout<<"floatFPU:      "<<a/b<<std::endl;*/
 	return result;
 }

@@ -67,7 +67,7 @@ int fmul(float a, float b)	{
 	result = result | *reinterpret_cast<int*>(&man_c);
 	result = result | sign_c;
 	result = result | exp_c;
-	
+	/*
 	std::cout<<"mantysa        "<<std::bitset<32>(0b01111111100000000000000000000000)<<std::endl;
 	std::cout<<"exponenta      "<<std::bitset<32>(0b00000000011111111111111111111111)<<std::endl;
 	std::cout<<"_a:            "<<std::bitset<32>(_a)<<std::endl;
@@ -77,6 +77,6 @@ int fmul(float a, float b)	{
 	std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
 	
 	std::cout<<"resultFloat:   "<<*reinterpret_cast<float*>(&result)<<std::endl;
-	std::cout<<"floatFPU:      "<<a*b<<std::endl;
+	std::cout<<"floatFPU:      "<<a*b<<std::endl;*/
 	return result;
 }
