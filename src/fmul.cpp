@@ -4,72 +4,75 @@
 #include <iso646.h>
 
 int fmul(float a, float b)	{
-	// Znak(1) Exponenta(8) Mantysa(23)
 
-	// zamiana float na uint
+	// transfer float representation to an int
 	unsigned int _a = *reinterpret_cast<int*>(&a);
 	unsigned int _b = *reinterpret_cast<int*>(&b);
 
-	// mantysa + poprzedzająca, ukryta 1
+	// mantissa + hidden bit
 	unsigned int man_a = (_a & 0b00000000011111111111111111111111) + 0b00000000100000000000000000000000;
 	unsigned int man_b = (_b & 0b00000000011111111111111111111111) + 0b00000000100000000000000000000000;
-	// exponenta
+	// exponent
 	unsigned int exp_a = (_a & 0b01111111100000000000000000000000) >> 23;
 	unsigned int exp_b = (_b & 0b01111111100000000000000000000000) >> 23;
-	// znak
+	// sign
 	unsigned int sign_a = _a & 0b10000000000000000000000000000000;
 	unsigned int sign_b = _b & 0b10000000000000000000000000000000;
 	
-	// wynik
+	// result
 	unsigned int result = 0;
 	
-	// dodanie exponent
+	// adding exponents
 	unsigned int exp_c = exp_a + exp_b - 127;
 	
-	// xor znaków
+	// signs xor
 	unsigned int sign_c = sign_a ^ sign_b;
 	
-	// mnożenie mantys z dodanym ukrytym bitem
+	// multiply mantissas
 	unsigned long long man_c = (long long)(man_a) * (long long)(man_b);
-	// sprawdzanie czy wynik zostal zdenormalizowany
-	// przesuniecie wyniku o 46 miejsc(domyślne miejsce przecinka po wymnożeniu)
+	// check if result is denormalized
+	// shift through 46 bits(place of the point)
 	if((man_c>>46) > 1)	
 	{
-		// jesli tak
+		// if it's denormalized
 		unsigned long long man_copy = man_c>>46;
 	
-		// powiekszenie exponenty
+		// add 1 to exponent
 		exp_c += 1;
-		// sprawdzenie czy exponenta przekroczyła max
+		// check if exponent is ok
 		if (exp_c > 255 || exp_c < 0)	{
-			// zly wynik, poza granicami
+			// bad result, throw exception
 		}
-		// przywrocenie exponenty na odpowiednie miejsce
+		// shift exponent to the right place
 		exp_c = exp_c << 23;
-		// przesuniecie wyniku w prawo do wyrównania
-		// przecinek wyniku mnożenia jest 46 pozycji od prawej strony,
-		// 23 z tych pozycji zajmuje mantysa, więc przesuwamy o 46-23 pozycji,
-		// uwzględniamy przesuniecie o 1 przy normalizacji
+		
+		// shift result to the right
+		// add +1 as we normalize
 		man_c = ( man_c >> (23 + 1) );
-		// i odjęcie ukrytego bitu
+		// subtract the hidden bit
 		man_c = man_c ^ 0b00000000100000000000000000000000;
 	}
 	else	{
-		exp_c = exp_c << 23;
-//		std::cout<<"exp_c:         "<<std::bitset<32>(exp_c)<<std::endl;
-		// jeśli nie, to po prostu przesuwamy liczbę w prawo do wyrównania o 46-23 pozycji
+		//if it's normalized then just shift right
 		man_c = man_c >> 23;
-		// i ucinamy ukryty bit
+		// shift exponent to the right place
+		exp_c = exp_c << 23;
+		// subtract the hidden bit
 		man_c = man_c ^ 0b00000000100000000000000000000000;
 	}
 	
-	// skladanie wyniku
+	// put the result together
 	result = result | *reinterpret_cast<int*>(&man_c);
 	result = result | sign_c;
 	result = result | exp_c;
 	/*
 	std::cout<<"mantysa        "<<std::bitset<32>(0b01111111100000000000000000000000)<<std::endl;
 	std::cout<<"exponenta      "<<std::bitset<32>(0b00000000011111111111111111111111)<<std::endl;
+=======
+	
+	std::cout<<"mantissa       "<<std::bitset<32>(0b01111111100000000000000000000000)<<std::endl;
+	std::cout<<"exponent       "<<std::bitset<32>(0b00000000011111111111111111111111)<<std::endl;
+>>>>>>> refs/remotes/origin/master
 	std::cout<<"_a:            "<<std::bitset<32>(_a)<<std::endl;
 	std::cout<<"_b:            "<<std::bitset<32>(_b)<<std::endl;
 	std::cout<<"man_a:         "<<std::bitset<32>(man_a)<<std::endl;
