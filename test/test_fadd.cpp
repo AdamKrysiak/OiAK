@@ -9,9 +9,22 @@
 
 
 float getRandomFloat(){
-	float randomValue = (((float)rand()) / (float) RAND_MAX)*(rand()%100)+1;
+	float randomValue = (((float)rand()) / (float) RAND_MAX)*(rand()%10000)+1;
 	return randomValue;
 }
+
+
+//----------------------------------TEST made to try single value
+/*TEST(FlibTest, FsubTest){
+	float a =4112.2614;
+	float b =5.5396;
+	int score = fadd(a,b);
+	std::cout<<*reinterpret_cast<float*>(&score)<<std::endl<<a+b;
+	ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score),a+b);
+
+
+}*/
+
 
 
 TEST(FlibTest, FaddTest){
@@ -20,6 +33,7 @@ TEST(FlibTest, FaddTest){
 		float a =getRandomFloat();
 		float b =getRandomFloat();
 		int score = fadd(a,b);
+
 		ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score),a+b);
 	}
 
@@ -31,10 +45,13 @@ TEST(FlibTest, FsubTest){
 		float a =getRandomFloat();
 		float b =getRandomFloat();
 		int score = fadd(a,-b);
+		//std::cout<<a<<" "<<b<<std::endl;
+
 		ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score),a-b);
 	}
 
 }
+
 
 TEST(FlipTest, FmulTest){
 	std::srand(std::time(0));
@@ -51,8 +68,10 @@ TEST(FlipTest, FdivTest){
 		for(int i=0;i<10;i++){
 			float a =getRandomFloat();
 			float b =getRandomFloat();
-			int score = fmul(a,b);
-			ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score),a*b);
+			int score = fdiv(a,b);
+			std::cout<<a<<" "<<b<<std::endl;
+
+			ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score),a/b);
 }
 }
 

@@ -1,5 +1,6 @@
 #include "flib.h"
 #include <iostream>
+#include <cstdlib>
 #include <bitset>
 #include <iso646.h>
 
@@ -34,10 +35,13 @@ int fadd(float a, float b)
 	unsigned int exp_a = ((_a & exponent)>>23)-127;
 	unsigned int exp_b = ((_b & exponent)>>23)-127;
 
+
 /*
 
 	std::cout<<"exp_a:              "<<std::bitset<32>(exp_a)<<std::endl;
 	std::cout<<"exp_b:              "<<std::bitset<32>(exp_b)<<std::endl;
+	std::cout<<"man_a:              "<<std::bitset<32>(man_a)<<std::endl;
+	std::cout<<"man_b:              "<<std::bitset<32>(man_b)<<std::endl;
 */
 
 
@@ -81,7 +85,7 @@ int fadd(float a, float b)
 	}
 	//if signs are different - subtract
 	else {
-		if((man_a|exp_a)<=(man_b|exp_b)) {
+		if((exp_a)>(exp_b)||((exp_a==exp_b)&&(man_a>man_b))) {
 			sign_c = sign_a;
 			//difference between exponents
 			difference_exp_ab = ((exp_a)-(exp_b));
@@ -109,14 +113,17 @@ int fadd(float a, float b)
 	int GRS_bits = man_c && 0b00000000000000000000000000000111;
 	man_c = man_c>>3;
 	if(GRS_bits>=0x3) //011
-		if(sign==0)
+		if(sign_c==0)
 			man_c+=0b00000000000000000000000000000001;
 	else
-		if(sign==1)
+		if(sign_c!=0)
 			man_c+=0b00000000000000000000000000000001;
+
 
 
 /*
+
+
 	std::cout<<"man_c:              "<<std::bitset<32>(man_c)<<std::endl;
 	std::cout<<"exp_c:              "<<std::bitset<32>(exp_c)<<std::endl;
 	std::cout<<"sign_c:             "<<std::bitset<32>(sign_c)<<std::endl;
@@ -125,6 +132,8 @@ int fadd(float a, float b)
 
 	std::cout<<"----------------------------------------------------------------------------"<<std::endl;
 */
+
+
 	//counter is number of bits to shift when normalizing
 	int counter = 0;
 	unsigned long long man_copy = man_c;
@@ -137,7 +146,8 @@ int fadd(float a, float b)
 
 	//counter -23 due to the difference of right number of bits and the number we got
 	//normalize exponent
-	exp_c += counter-23;
+	int movement = counter - 23;
+	exp_c += movement;
 	
 	//check if exponent is ok
 	if (exp_c > 255 || exp_c < 0) {
@@ -148,12 +158,12 @@ int fadd(float a, float b)
 	exp_c = exp_c << 23;
 
 
-/*	
- std::cout<<"przesuniecie w prawo o:  "<<counter-23<<std::endl;
- */
+	if(movement>0)
+		man_c =  man_c>>(movement);
+	else
+		man_c =  man_c<<(-movement);
 
-	man_c =  man_c>>(counter-23);
-	
+//	std::cout<<"man_c:               "<<std::bitset<32>(man_c)<<std::endl;
 	//subtract the hidden bit
 	man_c = man_c ^ 0b00000000100000000000000000000000;
 	
@@ -186,6 +196,6 @@ int fadd(float a, float b)
 
 
 	std::cout<<"my_result:     "<<*reinterpret_cast<float*>(&result)<<std::endl;
-	std::cout<<"float_result:  "<<a+b<<std::endl; */
+	std::cout<<"float_result:  "<<a+b<<std::endl;*/
 	return result;
 }
