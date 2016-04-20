@@ -1,9 +1,9 @@
-#include "flib.h"
+#include "FPU.h"
 #include <iostream>
 #include <bitset>
 #include <iso646.h>
 
-int fmul(float a, float b)	{
+int FPU::fmul(float a, float b)	{
 
 	// transfer float representation to an int
 	unsigned int _a = *reinterpret_cast<int*>(&a);
@@ -30,13 +30,15 @@ int fmul(float a, float b)	{
 	
 	// multiply mantissas
 	unsigned long long man_c = (long long)(man_a) * (long long)(man_b);
+
+
 	// check if result is denormalized
 	// shift through 46 bits(place of the point)
 	if((man_c>>46) > 1)	
 	{
-		// if it's denormalized
-		unsigned long long man_copy = man_c>>46;
-	
+
+
+
 		// add 1 to exponent
 		exp_c += 1;
 		// check if exponent is ok
@@ -48,7 +50,28 @@ int fmul(float a, float b)	{
 		
 		// shift result to the right
 		// add +1 as we normalize
-		man_c = ( man_c >> (23 + 1) );
+		// so it shoud be 23 + 1 but we have to know RS bits
+
+		man_c = ( man_c >> 22 );
+
+//========================================================================
+//ROUNDING
+//========================================================================
+
+	//rounding to plus infinitive
+		int RS_bits = man_c && 0b00000000000000000000000000000011;
+		man_c = man_c>>2;
+
+		if( this->getRounding()==1){
+		if(RS_bits>=0x3) //011
+			if(sign_c==0)
+				man_c+=0b00000000000000000000000000000001;
+		else
+			if(sign_c!=0)
+				man_c-=0b00000000000000000000000000000001;
+		}
+
+
 		// subtract the hidden bit
 		man_c = man_c ^ 0b00000000100000000000000000000000;
 	}

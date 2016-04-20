@@ -1,9 +1,9 @@
-#include "flib.h"
-#include <iostream>
+#include <FPU.h>
 #include <bitset>
-#include <iso646.h>
+#include <iostream>
 
-int fdiv(float a, float b)	{
+
+int FPU::fdiv(float a, float b)	{
 
 	// transfer float representation to an int
 	unsigned int _a = *reinterpret_cast<int*>(&a);
@@ -58,29 +58,30 @@ int fdiv(float a, float b)	{
 	//rounding to plus infinitive
 		int GRS_bits = man_c && 0b00000000000000000000000000000111;
 		man_c = man_c>>3;
+		if( this->getRounding()==1){
 		if(GRS_bits>=0x3) //011
 			if(sign_c==0)
 				man_c+=0b00000000000000000000000000000001;
 		else
 			if(sign_c!=0)
-				man_c+=0b00000000000000000000000000000001;
-
+				man_c-=0b00000000000000000000000000000001;
+		}
 
 	//========================================================================
 	//NORMALIZATION
 	//========================================================================
 
 	unsigned long long man_copy = man_c;
-	int counter;
+	int movement;
 
 	while(man_copy > 1) {
 			man_copy = man_copy >> 1;
-			counter++;
+			movement++;
 		}
 
 		//counter -23 due to the difference of right number of bits and the number we got
 		//normalize exponent
-		int movement = counter - 23;
+		movement = movement- 23;
 		exp_c += movement;
 
 		//check if exponent is ok
@@ -117,10 +118,10 @@ int fdiv(float a, float b)	{
 	
 
 	float c = a / b;
-	/*
+
 	std::cout<<"ourBinary:     "<<std::bitset<32>(result)<<std::endl;
 	std::cout<<"floatBinary:   "<<std::bitset<32>(*reinterpret_cast<int*>(&c))<<std::endl;
 	std::cout<<"floatFPU:      "<<a/b<<std::endl;
-	*/
+
 	return result;
 }

@@ -1,10 +1,10 @@
-#include "flib.h"
+#include "FPU.h"
 #include <iostream>
 #include <cstdlib>
 #include <bitset>
 #include <iso646.h>
 
-int fadd(float a, float b)
+int FPU::fadd(float a, float b)
 {
 	float float_score = a + b;
 
@@ -27,10 +27,8 @@ int fadd(float a, float b)
 	unsigned int exponent = 0b01111111100000000000000000000000;
 
 	//moving mantissa 3 bits left, now last 3 bits of score will be GRS
-	unsigned long man_a = ((_a & mantissa) + 0b00000000100000000000000000000000)
-			<< 3;
-	unsigned long man_b = (_b & mantissa) + 0b00000000100000000000000000000000
-			<< 3;
+	unsigned long man_a = ((_a & mantissa) + 0b00000000100000000000000000000000)	<< 3;
+	unsigned long man_b = ((_b & mantissa) + 0b00000000100000000000000000000000	)	<< 3;
 
 	// shift to the beginning and subtract excess
 	unsigned int exp_a = ((_a & exponent) >> 23) - 127;
@@ -125,12 +123,14 @@ int fadd(float a, float b)
 	//rounding to plus infinitive
 	int GRS_bits = man_c && 0b00000000000000000000000000000111;
 	man_c = man_c >> 3;
+	if( this->getRounding()==1){
+
 	if (GRS_bits >= 0x3) //011
 		if (sign_c == 0)
 			man_c += 0b00000000000000000000000000000001;
 		else if (sign_c != 0)
-			man_c += 0b00000000000000000000000000000001;
-
+			man_c -= 0b00000000000000000000000000000001;
+	}
 	/*
 	 std::cout<<"man_c:              "<<std::bitset<32>(man_c)<<std::endl;
 	 std::cout<<"exp_c:              "<<std::bitset<32>(exp_c)<<std::endl;
