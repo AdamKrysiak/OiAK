@@ -1,16 +1,13 @@
-#include <bitset>
-#include <iostream>
-
-#pragma STDC FENV_ACCESS ON
-#include <cfenv>
-
 #include <FPU.h>
 #include <gtest/gtest.h>
+#include <Stoper.h>
 #include <cstdlib>
 #include <ctime>
 
 
 extern "C" void fpu_ctr(int x);
+
+Stoper stoper = Stoper::getInstance();
 
 float getRandomFloat()
 {
@@ -46,9 +43,21 @@ TEST(fpu_ctr,roundingTest){
 TEST(FaddTest, Normal)
 {
 	FPU fpu;
+	fpu.setRounding(Rounding::NEAREST);
 	float a = 10.124314;
 	float b = 109418.124314;
 	int score = fpu.fadd(a, b);
+
+	stoper.start();				//przykład działania klasy Stoper
+	fpu.fadd(a, b);
+	stoper.stop();
+	stoper.printLastMeasure();
+
+	stoper.start();
+	a + b;
+	stoper.stop();
+	stoper.printLastMeasure();
+
 	ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
 	a = 11230.124314;
 	b = 10948.2343144;

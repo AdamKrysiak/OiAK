@@ -7,7 +7,6 @@
 int FPU::fadd(float a, float b)
     {
     float float_score = a + b;
-
     // a has to be bigger
     unsigned int _a;
     unsigned int _b;
@@ -125,7 +124,7 @@ int FPU::fadd(float a, float b)
     //rounding to plus infinitive
     int GRS_bits = man_c && 0b0000000000000000000000000000111;
     man_c = man_c >> 3;
-    if (this->getRounding() == 2)		//+inf
+    if (this->getRounding() == Rounding::PLUS_INF)		//+inf
 	{
 
 	if (GRS_bits >= 0x1) //001
@@ -134,7 +133,7 @@ int FPU::fadd(float a, float b)
 		man_c += 0b0000000000000000000000000000001;
 	    }
 	}
-    else if (this->getRounding() == 1)		//to nearest
+    else if (this->getRounding() == Rounding::NEAREST)		//to nearest
 	{
 
 	if (GRS_bits >= 0x3) //011
@@ -142,7 +141,7 @@ int FPU::fadd(float a, float b)
 		man_c += 0b0000000000000000000000000000001;
 	    }
 	}
-    else 					//-inf
+    else if (this->getRounding() == Rounding::MINUS_INF) 					//-inf
 	{
 
 	if (GRS_bits >= 0x1) //001
@@ -219,7 +218,7 @@ int FPU::fadd(float a, float b)
 
 
 */
-    std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
-    std::cout<<"float_result:  "<<std::bitset<32>(*reinterpret_cast<int*>(&float_score))<<std::endl;
+   // std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
+   // std::cout<<"float_result:  "<<std::bitset<32>(*reinterpret_cast<int*>(&float_score))<<std::endl;
     return result;
     }

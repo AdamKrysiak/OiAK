@@ -57,7 +57,7 @@ int FPU::fdiv(float a, float b)
     //rounding to plus infinitive
         int GRS_bits = man_c && 0b0000000000000000000000000000111;
         man_c = man_c >> 3;
-        if (this->getRounding() == 2)		//+inf
+        if (this->getRounding() == Rounding::PLUS_INF)		//+inf
     	{
 
     	if (GRS_bits >= 0x1) //001
@@ -66,7 +66,7 @@ int FPU::fdiv(float a, float b)
     		man_c += 0b0000000000000000000000000000001;
     	    }
     	}
-        else if (this->getRounding() == 1)		//to nearest
+        else if (this->getRounding() == Rounding::NEAREST)		//to nearest
     	{
 
     	if (GRS_bits >= 0x3) //011
@@ -74,7 +74,7 @@ int FPU::fdiv(float a, float b)
     		man_c += 0b0000000000000000000000000000001;
     	    }
     	}
-        else 					//-inf
+        else if (this->getRounding() == Rounding::MINUS_INF) 					//-inf
     	{
 
     	if (GRS_bits >= 0x1) //001
