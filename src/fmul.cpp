@@ -18,6 +18,10 @@ int FPU::fmul(float a, float b)
     // exponent
     unsigned int exp_a = (_a & 0b01111111100000000000000000000000) >> 23;
     unsigned int exp_b = (_b & 0b01111111100000000000000000000000) >> 23;
+
+    if (exp_a == 0 || exp_b == 0)
+	throw FPU_Denormalized_Exception();
+
     // sign
     unsigned int sign_a = _a & 0b10000000000000000000000000000000;
     unsigned int sign_b = _b & 0b10000000000000000000000000000000;
@@ -41,11 +45,6 @@ int FPU::fmul(float a, float b)
 
 	// add 1 to exponent
 	exp_c += 1;
-	// check if exponent is ok
-	if (exp_c > 255 || exp_c < 0)
-	    {
-	    // bad result, throw exception
-	    }
 	// shift exponent to the right place
 	exp_c = exp_c << 23;
 
@@ -68,7 +67,7 @@ int FPU::fmul(float a, float b)
 
 	    if (RS_bits >= 0x1) //001
 		{
-		if (sign_c == 0)	//if its negative (x<0), we just cut GRS
+		if (sign_c == 0)	//if its negative (x<0), we just cut RS
 		    man_c += 0b0000000000000000000000000000001;
 		}
 	    }
@@ -103,6 +102,35 @@ int FPU::fmul(float a, float b)
 	// subtract the hidden bit
 	man_c = man_c ^ 0b00000000100000000000000000000000;
 	}
+
+    //========================================================================
+    //EXCEPTIONS
+    //========================================================================
+    if (exp_c >= (255<<23))
+	{
+	if (man_c == 0)
+	    {
+	    if (sign_c == 1)
+		throw FPU_minInf_Exception();
+	    else
+		throw FPU_plusInf_Exception();
+	    }
+	throw FPU_NAN_Exception();
+	}
+    else if (exp_c == 0)
+	{
+	if (man_c == 0)
+	    {
+	    if (sign_c == 1)
+		throw FPU_minZero_Exception();
+	    else
+		throw FPU_plusZero_Exception();
+	    }
+	throw FPU_Denormalized_Exception();
+	}
+//========================================================================
+//PUTTING THE RESULT TOGETHER
+//========================================================================
 
     // put the result together
     result = result | *reinterpret_cast<int*>(&man_c);

@@ -1,8 +1,5 @@
-#include "FPU.h"
-#include <iostream>
-#include <cstdlib>
-#include <bitset>
-#include <iso646.h>
+#include <FPU.h>
+#include <FPUExceptions.h>
 
 int FPU::fadd(float a, float b)
     {
@@ -35,6 +32,8 @@ int FPU::fadd(float a, float b)
     unsigned int exp_a = ((_a & exponent) >> 23) - 127;
     unsigned int exp_b = ((_b & exponent) >> 23) - 127;
 
+    if (((_a & exponent) >> 23) == 0 || ((_b & exponent) >> 23) == 0)
+  	throw FPU_Denormalized_Exception();
     /*
 
      std::cout<<"exp_a:              "<<std::bitset<32>(exp_a)<<std::endl;
@@ -129,7 +128,7 @@ int FPU::fadd(float a, float b)
 
 	if (GRS_bits >= 0x1) //001
 	    {
-	    if (sign_c == 0)						//if its negative (x<0), we just cut GRS
+	    if (sign_c == 0)		//if its negative (x<0), we just cut GRS
 		man_c += 0b0000000000000000000000000000001;
 	    }
 	}
@@ -138,10 +137,10 @@ int FPU::fadd(float a, float b)
 
 	if (GRS_bits >= 0x3) //011
 	    {
-		man_c += 0b0000000000000000000000000000001;
+	    man_c += 0b0000000000000000000000000000001;
 	    }
 	}
-    else if (this->getRounding() == Rounding::MINUS_INF) 					//-inf
+    else if (this->getRounding() == Rounding::MINUS_INF) 		//-inf
 	{
 
 	if (GRS_bits >= 0x1) //001
@@ -196,6 +195,32 @@ int FPU::fadd(float a, float b)
     man_c = man_c ^ 0b00000000100000000000000000000000;
 
     //========================================================================
+    //EXCEPTIONS
+    //========================================================================
+    if (exp_c >= (255<<23))
+	{
+	if (man_c == 0)
+	    {
+	    if (sign_c == 1)
+		throw FPU_minInf_Exception();
+	    else
+		throw FPU_plusInf_Exception();
+	    }
+	throw FPU_NAN_Exception();
+	}
+    else if (exp_c == 0)
+	{
+	if (man_c == 0)
+	    {
+	    if (sign_c == 1)
+		throw FPU_minZero_Exception();
+	    else
+		throw FPU_plusZero_Exception();
+	    }
+	throw FPU_Denormalized_Exception();
+	}
+
+    //========================================================================
     //PUTTING THE RESULT TOGETHER
     //========================================================================
 
@@ -217,8 +242,8 @@ int FPU::fadd(float a, float b)
      std::cout<<"exp_c:         "<<std::bitset<32>(exp_c)<<std::endl;
 
 
-*/
-   // std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
-   // std::cout<<"float_result:  "<<std::bitset<32>(*reinterpret_cast<int*>(&float_score))<<std::endl;
+     */
+    // std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
+    // std::cout<<"float_result:  "<<std::bitset<32>(*reinterpret_cast<int*>(&float_score))<<std::endl;
     return result;
     }
