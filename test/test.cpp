@@ -5,8 +5,8 @@
 #include <ctime>
 
 
-extern "C" void fpu_ctr(int x);
 
+extern "C" void fpu_ctr(int x);
 Stoper stoper = Stoper::getInstance();
 
 float getRandomFloat()
@@ -44,6 +44,7 @@ TEST(FaddTest, Normal)
 {
 	FPU fpu;
 	fpu.setRounding(Rounding::NEAREST);
+	fpu_ctr(0);
 	float a = 10.124314;
 	float b = 109418.124314;
 	int score = fpu.fadd(a, b);
@@ -193,13 +194,11 @@ TEST(FlipTest, FmulTest)
 TEST(FlipTest, FdivTest)
 {
 	FPU fpu;
-	std::srand(std::time(0));
 	for (int i = 0; i < 100; i++)
 	{
-		float a = getRandomFloat();
-		float b = getRandomFloat();
+		float a = 156.12356;
+		float b = 6.12356;
 		int score = fpu.fdiv(a, b);
-		//std::cout << a << " " << b << std::endl;
 
 		ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
 	}

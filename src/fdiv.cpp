@@ -4,6 +4,8 @@
 
 int FPU::fdiv(float a, float b)
     {
+    float temp = a/b;
+    int float_score = *reinterpret_cast<int*>(&temp);
 
     // transfer float representation to an int
     unsigned int _a = *reinterpret_cast<int*>(&a);
@@ -40,8 +42,7 @@ int FPU::fdiv(float a, float b)
 
     // multiply mantissas
     //moving right for 20 not for 23 to have GRS bits
-    unsigned long long man_c = (((long long) (man_a) << 23)
-	    / ((long long) (man_b)) << 23) >> 20;
+    unsigned long long man_c = (((long long) (man_a) << 23)  / ((long long) (man_b)) << 23) >> 20;
 
     /*
 
@@ -89,7 +90,7 @@ int FPU::fdiv(float a, float b)
     //========================================================================
 
     unsigned long long man_copy = man_c;
-    int movement;
+    int movement=0;
 
     while (man_copy > 1)
 	{
@@ -134,11 +135,11 @@ int FPU::fdiv(float a, float b)
     result = result | exp_c;
 
     float c = a / b;
-
+/*
     std::cout << "ourBinary:     " << std::bitset<32>(result) << std::endl;
     std::cout << "floatBinary:   "
 	    << std::bitset<32>(*reinterpret_cast<int*>(&c)) << std::endl;
-    std::cout << "floatFPU:      " << a / b << std::endl;
+    std::cout << "floatFPU:      " << a / b << std::endl;*/
 
     return result;
     }
