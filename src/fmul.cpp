@@ -26,11 +26,44 @@ int FPU::fmul(float a, float b)
     unsigned int sign_a = _a & 0b10000000000000000000000000000000;
     unsigned int sign_b = _b & 0b10000000000000000000000000000000;
 
+    //========================================================================
+    //EXCEPTIONS IN PASSED
+    //========================================================================
+
+    if (exp_a == 0 || exp_b == 0)
+	throw FPU_Denormalized_Exception();
+
+    if (exp_a == 255)
+	{
+	if (man_a == (1 << 23))
+	    {
+	    if (sign_a == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+	    }
+	throw FPU_NAN_Exception();
+	}
+    if (exp_b == 255)
+	{
+	if (man_b == (1 << 23))
+	    {
+	    if (sign_b == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+	    }
+	throw FPU_NAN_Exception();
+	}
+    //========================================================================
+    //COUNTING
+    //========================================================================
+
     // result
     unsigned int result = 0;
 
     // adding exponents
-    unsigned int exp_c = exp_a + exp_b - 127;
+    int exp_c = exp_a + exp_b - 127;
 
     // signs xor
     unsigned int sign_c = sign_a ^ sign_b;
@@ -45,6 +78,17 @@ int FPU::fmul(float a, float b)
 
 	// add 1 to exponent
 	exp_c += 1;
+
+	//EXCEPTIONS IN RESULT
+	if (exp_c >= 255)
+	    {
+
+	    if (sign_c == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+
+	    }
 	// shift exponent to the right place
 	exp_c = exp_c << 23;
 
@@ -95,6 +139,16 @@ int FPU::fmul(float a, float b)
 	}
     else
 	{
+	//EXCEPTIONS IN RESULT
+	if (exp_c  >= 255)
+	    {
+
+	    if (sign_c == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+
+	    }
 	//if it's normalized then just shift right
 	man_c = man_c >> 23;
 	// shift exponent to the right place
@@ -104,28 +158,18 @@ int FPU::fmul(float a, float b)
 	}
 
     //========================================================================
-    //EXCEPTIONS
+    //EXCEPTIONS IN RESULT
     //========================================================================
-    if (exp_c >= (255<<23))
+
+    if (exp_c <= 0)
 	{
-	if (man_c == 0)
-	    {
-	    if (sign_c == 1)
-		throw FPU_minInf_Exception();
-	    else
-		throw FPU_plusInf_Exception();
-	    }
-	throw FPU_NAN_Exception();
-	}
-    else if (exp_c == 0)
-	{
-	if (man_c == 0)
-	    {
-	    if (sign_c == 1)
-		throw FPU_minZero_Exception();
-	    else
-		throw FPU_plusZero_Exception();
-	    }
+	/*if (man_c == 0)
+	 {
+	 if (sign_c == 1)
+	 throw FPU_minZero_Exception();
+	 else
+	 throw FPU_plusZero_Exception();
+	 }*/
 	throw FPU_Denormalized_Exception();
 	}
 //========================================================================

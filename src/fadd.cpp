@@ -32,8 +32,6 @@ int FPU::fadd(float a, float b)
     unsigned int exp_a = ((_a & exponent) >> 23) - 127;
     unsigned int exp_b = ((_b & exponent) >> 23) - 127;
 
-    if (((_a & exponent) >> 23) == 0 || ((_b & exponent) >> 23) == 0)
-  	throw FPU_Denormalized_Exception();
     /*
 
      std::cout<<"exp_a:              "<<std::bitset<32>(exp_a)<<std::endl;
@@ -50,6 +48,36 @@ int FPU::fadd(float a, float b)
     long long int exp_c;
 
     unsigned int difference_exp_ab;
+
+    //========================================================================
+    //EXCEPTIONS IN PASSED
+    //========================================================================
+
+    if (((_a & exponent) >> 23) == 0 || ((_b & exponent) >> 23) == 0)
+	throw FPU_Denormalized_Exception();
+
+    if (exp_a+127 == 255)		//127 is a balast
+	{
+	if (man_a == (1<<26))		//there is not zero because we add hided 1 and grs bits
+	    {
+	    if (sign_a == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+	    }
+	    throw FPU_NAN_Exception();
+	}
+    if (exp_b+127 == 255)
+    	{
+    	if (man_b == (1<<26))
+    	    {
+    	    if (sign_b == 0)
+    		throw FPU_plusInf_Exception();
+    	    else
+    		throw FPU_minInf_Exception();
+    	    }
+    	    throw FPU_NAN_Exception();
+    	}
 
     //========================================================================
     //COUNTING
@@ -195,28 +223,26 @@ int FPU::fadd(float a, float b)
     man_c = man_c ^ 0b00000000100000000000000000000000;
 
     //========================================================================
-    //EXCEPTIONS
+    //EXCEPTIONS IN RESULT
     //========================================================================
-    if (exp_c >= (255<<23))
+    if (exp_c >= (255 << 23))
 	{
-	if (man_c == 0)
-	    {
-	    if (sign_c == 1)
-		throw FPU_minInf_Exception();
-	    else
-		throw FPU_plusInf_Exception();
-	    }
-	throw FPU_NAN_Exception();
+
+	if (sign_c == 0)
+	    throw FPU_plusInf_Exception();
+	else
+	    throw FPU_minInf_Exception();
+
 	}
     else if (exp_c == 0)
 	{
-	if (man_c == 0)
-	    {
-	    if (sign_c == 1)
-		throw FPU_minZero_Exception();
-	    else
-		throw FPU_plusZero_Exception();
-	    }
+	/*if (man_c == 0)
+	 {
+	 if (sign_c == 1)
+	 throw FPU_minZero_Exception();
+	 else
+	 throw FPU_plusZero_Exception();
+	 }*/
 	throw FPU_Denormalized_Exception();
 	}
 

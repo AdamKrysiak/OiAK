@@ -24,7 +24,7 @@ class FPU_plusInf_Exception: public std::exception
     public:
     virtual const char* what() const throw ()
 	{
-	return "To big number Exception occured";
+	return "Plus infinity Exception occured";
 	}
     };
 
@@ -33,7 +33,7 @@ class FPU_minInf_Exception: public std::exception
     public:
     virtual const char* what() const throw ()
 	{
-	return "To big number Exception occured";
+	return "Minus infinity Exception occured";
 	}
     };
 class FPU_Denormalized_Exception: public std::exception
