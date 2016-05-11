@@ -2,17 +2,20 @@
 #include <gtest/gtest.h>
 #include <Stoper.h>
 #include <cstdlib>
+#include <fstream>
 #include <ctime>
 
 extern "C" void fpu_ctr(int x);
 
 Stoper stoper = Stoper::getInstance();
 
-TEST(FaddTest, Normal)
+
+TEST(FaddTest, Normal_RoundingMinusInf)
     {
     FPU fpu;
-    fpu.setRounding(Rounding::NEAREST);
+    fpu.setRounding(Rounding::MINUS_INF);
     fpu_ctr(0);
+
     float a = 10.124314;
     float b = 109418.124314;
     int score = fpu.fadd(a, b);
@@ -27,30 +30,122 @@ TEST(FaddTest, Normal)
     stoper.stop();
     stoper.printLastMeasure();
 
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
     a = 11230.124314;
     b = 10948.2343144;
     score = fpu.fadd(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
     a = -11230.124314;
     b = 10.1231234;
     score = fpu.fadd(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
 
     a = 1278.13874;
     b = -81237.12441;
     score = fpu.fadd(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
 
     a = 1230.124314;
     b = -81210.321234;
     score = fpu.fadd(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
 
     a = 30.125324;
     b = 10.643234;
     score = fpu.fadd(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    }
+TEST(FaddTest, Normal_RoundingPlusInf)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::PLUS_INF);
+    fpu_ctr(2);
+
+    float a = 10.124314;
+    float b = 109418.124314;
+    int score = fpu.fadd(a, b);
+
+    stoper.start();			//przykład działania klasy Stoper
+    fpu.fadd(a, b);
+    stoper.stop();
+    stoper.printLastMeasure();
+
+    stoper.start();
+    a + b;
+    stoper.stop();
+    stoper.printLastMeasure();
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    a = 11230.124314;
+    b = 10948.2343144;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    a = -11230.124314;
+    b = 10.1231234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 1230.124314;
+    b = -81210.321234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    }
+TEST(FaddTest, Normal_RoundingNearest)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::NEAREST);
+    fpu_ctr(1);
+
+    float a = 10.5;
+    float b = 109418.0;
+    int score = fpu.fadd(a, b);
+
+    stoper.start();			//przykład działania klasy Stoper
+    fpu.fadd(a, b);
+    stoper.stop();
+    stoper.printLastMeasure();
+
+    stoper.start();
+    a + b;
+    stoper.stop();
+    stoper.printLastMeasure();
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    a = 11230.124314;
+    b = 10948.2343144;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+    a = -11230.124314;
+    b = 10.1231234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 1230.124314;
+    b = -81210.321234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fadd(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a + b);
 
     }
 
@@ -181,35 +276,35 @@ TEST(FsubTest, Normal)
     {
     FPU fpu;
     fpu.setRounding(Rounding::NEAREST);
-    fpu_ctr(0);
+    fpu_ctr(1);
     float a = 10.124314;
     float b = 109418.124314;
     int score = fpu.fadd(a, -b);
 
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
     a = 11230.124314;
     b = 10948.2343144;
     score = fpu.fadd(a, -b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
     a = -11230.124314;
     b = 10.1231234;
     score = fpu.fadd(a, -b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
 
     a = 1278.13874;
     b = -81237.12441;
     score = fpu.fadd(a, -b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
 
     a = 1230.124314;
     b = -81210.321234;
     score = fpu.fadd(a, -b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
 
     a = 30.125324;
     b = 10.643234;
     score = fpu.fadd(a, -b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a - b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a - b);
 
     }
 
@@ -336,39 +431,111 @@ TEST(FsubTest, NANPassed)
 	}
     }
 
-TEST(FmulTest, Normal)
+TEST(FmulTest, Normal_RoundingPlusInf)
     {
     FPU fpu;
-    fpu.setRounding(Rounding::NEAREST);
+    fpu.setRounding(Rounding::PLUS_INF);
+    fpu_ctr(2);
+    float a = 10.124314;
+    float b = 109418.124314;
+    int score = fpu.fmul(a, b);
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    a = 11230.124314;
+    b = 10948.2343144;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    a = -11230.124314;
+    b = 10.1231234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 1230.124314;
+    b = -81210.321234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    }
+
+TEST(FmulTest, Normal_RoundingMinusInf)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::MINUS_INF);
     fpu_ctr(0);
     float a = 10.124314;
     float b = 109418.124314;
     int score = fpu.fmul(a, b);
 
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
     a = 11230.124314;
     b = 10948.2343144;
     score = fpu.fmul(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
     a = -11230.124314;
     b = 10.1231234;
     score = fpu.fmul(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
 
     a = 1278.13874;
     b = -81237.12441;
     score = fpu.fmul(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
 
     a = 1230.124314;
     b = -81210.321234;
     score = fpu.fmul(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
 
     a = 30.125324;
     b = 10.643234;
     score = fpu.fmul(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    }
+
+TEST(FmulTest, Normal_RoundingNearest)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::NEAREST);
+    fpu_ctr(1);
+    float a = 10.124314;
+    float b = 109418.124314;
+    int score = fpu.fmul(a, b);
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    a = 11230.124314;
+    b = 10948.2343144;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+    a = -11230.124314;
+    b = 10.1231234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 1230.124314;
+    b = -81210.321234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fmul(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a * b);
 
     }
 
@@ -495,39 +662,117 @@ TEST(FmulTest, NANPassed)
 	}
     }
 
-TEST(FdivTest, Normal)
+TEST(FdivTest, Normal_RoundingMinusInf)
     {
     FPU fpu;
-    fpu.setRounding(Rounding::NEAREST);
+    fpu.setRounding(Rounding::MINUS_INF);
     fpu_ctr(0);
     float a = 10.124314;
     float b = 109418.124314;
     int score = fpu.fdiv(a, b);
 
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
-    a = 11230.124314;
-    b = 10948.2343144;
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    a = 11230.287144;
+    b = 10948.287144;
     score = fpu.fdiv(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
-    a = -11230.124314;
-    b = 10.1231234;
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    a = -11230, 4231234;
+    b = 10000.4231234;
+
     score = fpu.fdiv(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
 
     a = 1278.13874;
     b = -81237.12441;
     score = fpu.fdiv(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
 
-    a = 1230.124314;
+    a = 12030.124314;
     b = -81210.321234;
     score = fpu.fdiv(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
 
     a = 30.125324;
     b = 10.643234;
     score = fpu.fdiv(a, b);
-    ASSERT_FLOAT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    }
+
+TEST(FdivTest, Normal_RoundingPlusInf)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::PLUS_INF);
+    fpu_ctr(2);
+    float a = 10.124314;
+    float b = 109418.124314;
+    int score = fpu.fdiv(a, b);
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    a = 11230.287144;
+    b = 10948.287144;
+    score = fpu.fdiv(a, b);
+
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+    a = -11230, 4231234;
+    b = 10000.4231234;
+
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 12030.124314;
+    b = -81210.321234;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    }
+
+TEST(FdivTest, Normal_RoundingNearest)
+    {
+    FPU fpu;
+    fpu.setRounding(Rounding::NEAREST);
+    fpu_ctr(1);
+
+    float a = 10.124314;
+    float b = 109418.124314;
+    int score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 1278.13874;
+    b = -81237.12441;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 12030.124314;
+    b = -81210.321234;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 30.125324;
+    b = 10.643234;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = 11230.287144;
+    b = 10948.287144;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
+
+    a = -11230, 4231234;
+    b = 10000.4231234;
+    score = fpu.fdiv(a, b);
+    ASSERT_EQ(*reinterpret_cast<float*>(&score), a / b);
 
     }
 
@@ -653,3 +898,83 @@ TEST(FdivTest, NANPassed)
 	ASSERT_EQ(1, 1);
 	}
     }
+
+TEST(FdivTest, ZeroPassed)
+    {
+    FPU fpu;
+    try
+	{
+	float a= 5616116;
+	float b = 0;
+	int score = fpu.fdiv(a, b);
+	ASSERT_EQ(0, 1);
+	}
+    catch (FPU_divideByZero_Exception &ex)
+	{
+	ASSERT_EQ(1, 1);
+	}
+    }
+/*
+TEST(SpeedTest, speedTest)
+    {
+
+    FPU fpu;
+    fpu_ctr(1);
+    std::fstream file("wyniki.txt", std::ios::out);
+    float a = 56115.156;
+    float b = 15616.65165;
+
+    file << "NASZ FPU DODAWANIE\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	fpu.fadd(a, b);
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+    file << "ORYGINALNY FPU DODAWANIE\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	a + b;
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+    file << "NASZ FPU MNOŻENIE\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	fpu.fmul(a, b);
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+    file << "ORYGINALNY FPU MNOŻENIE\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	a * b;
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+    file << "NASZ FPU Dzielenie\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	fpu.fdiv(a, b);
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+    file << "ORYGINALNY FPU Dzielenie\n";
+    for (int i = 0; i < 50; ++i)
+	{
+	stoper.start();
+	a / b;
+	stoper.stop();
+	file << stoper.getLastMeasure() << std::endl;
+	}
+
+    file.close();
+
+    }
+*/
+

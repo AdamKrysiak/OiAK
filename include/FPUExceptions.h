@@ -62,4 +62,13 @@ class FPU_minZero_Exception: public std::exception
 	return "Minus zero number Exception occured";
 	}
     };
+
+class FPU_divideByZero_Exception: public std::exception
+    {
+    public:
+    virtual const char* what() const throw ()
+	{
+	return "divide by zero Exception occured";
+	}
+    };
 #endif /* SRC_FPUEXCEPTIONS_H_ */

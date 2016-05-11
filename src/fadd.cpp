@@ -1,9 +1,13 @@
 #include <FPU.h>
 #include <FPUExceptions.h>
+#include <bitset>
+#include <iostream>
 
 int FPU::fadd(float a, float b)
     {
-    float float_score = a + b;
+    /*
+     float temp = a + b;
+     int float_score = *reinterpret_cast<int*>(&temp);*/
     // a has to be bigger
     unsigned int _a;
     unsigned int _b;
@@ -46,7 +50,7 @@ int FPU::fadd(float a, float b)
     unsigned int sign_c;
     long long man_c;
     long long int exp_c;
-
+    int GRS_bits = 0;
     unsigned int difference_exp_ab;
 
     //========================================================================
@@ -56,28 +60,28 @@ int FPU::fadd(float a, float b)
     if (((_a & exponent) >> 23) == 0 || ((_b & exponent) >> 23) == 0)
 	throw FPU_Denormalized_Exception();
 
-    if (exp_a+127 == 255)		//127 is a balast
+    if (exp_a + 127 == 255)		//127 is a balast
 	{
-	if (man_a == (1<<26))		//there is not zero because we add hided 1 and grs bits
+	if (man_a == (1 << 26))	//there is not zero because we add hided 1 and grs bits
 	    {
 	    if (sign_a == 0)
 		throw FPU_plusInf_Exception();
 	    else
 		throw FPU_minInf_Exception();
 	    }
-	    throw FPU_NAN_Exception();
+	throw FPU_NAN_Exception();
 	}
-    if (exp_b+127 == 255)
-    	{
-    	if (man_b == (1<<26))
-    	    {
-    	    if (sign_b == 0)
-    		throw FPU_plusInf_Exception();
-    	    else
-    		throw FPU_minInf_Exception();
-    	    }
-    	    throw FPU_NAN_Exception();
-    	}
+    if (exp_b + 127 == 255)
+	{
+	if (man_b == (1 << 26))
+	    {
+	    if (sign_b == 0)
+		throw FPU_plusInf_Exception();
+	    else
+		throw FPU_minInf_Exception();
+	    }
+	throw FPU_NAN_Exception();
+	}
 
     //========================================================================
     //COUNTING
@@ -144,40 +148,6 @@ int FPU::fadd(float a, float b)
 	    }
 	}
 
-    //========================================================================
-    //ROUNDING
-    //========================================================================
-
-    //rounding to plus infinitive
-    int GRS_bits = man_c && 0b0000000000000000000000000000111;
-    man_c = man_c >> 3;
-    if (this->getRounding() == Rounding::PLUS_INF)		//+inf
-	{
-
-	if (GRS_bits >= 0x1) //001
-	    {
-	    if (sign_c == 0)		//if its negative (x<0), we just cut GRS
-		man_c += 0b0000000000000000000000000000001;
-	    }
-	}
-    else if (this->getRounding() == Rounding::NEAREST)		//to nearest
-	{
-
-	if (GRS_bits >= 0x3) //011
-	    {
-	    man_c += 0b0000000000000000000000000000001;
-	    }
-	}
-    else if (this->getRounding() == Rounding::MINUS_INF) 		//-inf
-	{
-
-	if (GRS_bits >= 0x1) //001
-	    {
-
-	    if (sign_c != 0)
-		man_c += 0b0000000000000000000000000000001;
-	    }
-	}
     /*
      std::cout<<"man_c:              "<<std::bitset<32>(man_c)<<std::endl;
      std::cout<<"exp_c:              "<<std::bitset<32>(exp_c)<<std::endl;
@@ -200,9 +170,9 @@ int FPU::fadd(float a, float b)
 	}
     /*	std::cout<<counter<<std::endl;*/
 
-    //counter -23 due to the difference of right number of bits and the number we got
+    //counter -26 due to the difference of right number of bits and the number we got and GRS bits
     //normalize exponent
-    int movement = counter - 23;
+    int movement = counter - 26;
     exp_c += movement;
 
     //check if exponent is ok
@@ -219,12 +189,60 @@ int FPU::fadd(float a, float b)
     else
 	man_c = man_c << (-movement);
 
+    GRS_bits = man_c & 0b0000000000000000000000000000111;
+    man_c = man_c >> 3;
+
     //subtract the hidden bit
     man_c = man_c ^ 0b00000000100000000000000000000000;
 
     //========================================================================
-    //EXCEPTIONS IN RESULT
+    //ROUNDING
     //========================================================================
+
+    if (this->getRounding() == Rounding::PLUS_INF)		//+inf
+	{
+
+	if (sign_c == 0)		//if its negative (x<0), we just cut GRS
+	    {
+	    if (GRS_bits >= 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	else			//if its negative (x<0), we just cut GRS
+	    {
+	    if (GRS_bits > 0b010)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	}
+    else if (this->getRounding() == Rounding::NEAREST)		//to nearest
+	{
+
+	if (GRS_bits > 0b010)
+	    {
+	    man_c += 0b0000000000000000000000000000001;
+	    }
+	if (GRS_bits == 0b010)
+	    {
+	    if (man_c & 0b1 != 0)
+		man_c += 0b0000000000000000000000000000001;
+
+	    }
+	}
+    else if (this->getRounding() == Rounding::MINUS_INF) 		//-inf
+	{
+	if (sign_c == 0)		//if its negative (x<0), we just cut GRS
+	    {
+	    if (GRS_bits > 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	else			//if its negative (x<0), we just cut GRS
+	    {
+	    if (GRS_bits >= 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	}
+//========================================================================
+//EXCEPTIONS IN RESULT
+//========================================================================
     if (exp_c >= (255 << 23))
 	{
 
@@ -246,9 +264,9 @@ int FPU::fadd(float a, float b)
 	throw FPU_Denormalized_Exception();
 	}
 
-    //========================================================================
-    //PUTTING THE RESULT TOGETHER
-    //========================================================================
+//========================================================================
+//PUTTING THE RESULT TOGETHER
+//========================================================================
 
     unsigned int result = *reinterpret_cast<int*>(&man_c);
     result = result | sign_c;
@@ -269,7 +287,9 @@ int FPU::fadd(float a, float b)
 
 
      */
-    // std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
-    // std::cout<<"float_result:  "<<std::bitset<32>(*reinterpret_cast<int*>(&float_score))<<std::endl;
+    /*  std::cout << "result:        " << std::bitset<32>(result) << std::endl;
+     std::cout << "float_result:  "
+     << std::bitset<32>(*reinterpret_cast<int*>(&float_score))
+     << std::endl;*/
     return result;
     }

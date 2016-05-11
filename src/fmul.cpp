@@ -5,7 +5,10 @@
 
 int FPU::fmul(float a, float b)
     {
-
+    /*
+     float temp = a * b;
+     int float_score = *reinterpret_cast<int*>(&temp);
+     */
     // transfer float representation to an int
     unsigned int _a = *reinterpret_cast<int*>(&a);
     unsigned int _b = *reinterpret_cast<int*>(&b);
@@ -25,7 +28,7 @@ int FPU::fmul(float a, float b)
     // sign
     unsigned int sign_a = _a & 0b10000000000000000000000000000000;
     unsigned int sign_b = _b & 0b10000000000000000000000000000000;
-
+    int RS_bits = 0;
     //========================================================================
     //EXCEPTIONS IN PASSED
     //========================================================================
@@ -91,56 +94,22 @@ int FPU::fmul(float a, float b)
 	    }
 	// shift exponent to the right place
 	exp_c = exp_c << 23;
-
 	// shift result to the right
 	// add +1 as we normalize
 	// so it shoud be 23 + 1 but we have to know RS bits
-
+	int temp = man_c & 0b1111111111111111111111;//chec if there was 1 to set S bit
 	man_c = (man_c >> 22);
-
-//========================================================================
-//ROUNDING
-//========================================================================
-
-	//rounding to plus infinitive
-	int RS_bits = man_c && 0b00000000000000000000000000000011;
-	man_c = man_c >> 2;
-
-	if (this->getRounding() == Rounding::PLUS_INF)		//+inf
-	    {
-
-	    if (RS_bits >= 0x1) //001
-		{
-		if (sign_c == 0)	//if its negative (x<0), we just cut RS
-		    man_c += 0b0000000000000000000000000000001;
-		}
-	    }
-	else if (this->getRounding() == Rounding::NEAREST)	//to nearest
-	    {
-
-	    if (RS_bits >= 0x3) //011
-		{
-		man_c += 0b0000000000000000000000000000001;
-		}
-	    }
-	else if (this->getRounding() == Rounding::MINUS_INF) 		//-inf
-	    {
-
-	    if (RS_bits >= 0x1) //001
-		{
-
-		if (sign_c != 0)
-		    man_c += 0b0000000000000000000000000000001;
-		}
-	    }
-
 	// subtract the hidden bit
+	RS_bits = man_c & 0b00000000000000000000000000000011;
+	man_c = man_c >> 2;
+	if (temp != 0)
+	    RS_bits += 1;
 	man_c = man_c ^ 0b00000000100000000000000000000000;
 	}
     else
 	{
 	//EXCEPTIONS IN RESULT
-	if (exp_c  >= 255)
+	if (exp_c >= 255)
 	    {
 
 	    if (sign_c == 0)
@@ -149,12 +118,66 @@ int FPU::fmul(float a, float b)
 		throw FPU_minInf_Exception();
 
 	    }
-	//if it's normalized then just shift right
-	man_c = man_c >> 23;
+
+	//if it's normalized then just shift right saving RS bits
+	int temp = man_c & 0b1111111111111111111111;//check if there was 1 to set S bit
+	man_c = man_c >> 21;
+
+	RS_bits = man_c & 0b00000000000000000000000000000011;
+	man_c = man_c >> 2;
+
+	if (temp != 0)
+	    RS_bits += 1;
 	// shift exponent to the right place
 	exp_c = exp_c << 23;
 	// subtract the hidden bit
 	man_c = man_c ^ 0b00000000100000000000000000000000;
+	}
+
+    //========================================================================
+    //ROUNDING
+    //========================================================================
+
+    if (this->getRounding() == Rounding::PLUS_INF)		//+inf
+	{
+
+	if (sign_c == 0)		//if its negative (x<0), we just cut GRS
+	    {
+	    if (RS_bits >= 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	else			//if its negative (x<0), we just cut GRS
+	    {
+	    if (RS_bits > 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	}
+    else if (this->getRounding() == Rounding::NEAREST)	//to nearest
+	{
+
+	if (RS_bits > 0b010)
+	    {
+	    man_c += 0b0000000000000000000000000000001;
+	    }
+	if (RS_bits == 0b010)
+	    {
+	    if ((man_c & 0b1) != 0)
+		man_c += 0b0000000000000000000000000000001;
+
+	    }
+	}
+    else if (this->getRounding() == Rounding::MINUS_INF) 		//-inf
+	{
+	if (sign_c == 0)		//if its negative (x<0), we just cut GRS
+	    {
+	    if (RS_bits > 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
+	else			//if its negative (x<0), we just cut GRS
+	    {
+	    if (RS_bits >= 0b10)
+		man_c += 0b0000000000000000000000000000001;
+	    }
 	}
 
     //========================================================================
@@ -193,8 +216,10 @@ int FPU::fmul(float a, float b)
      std::cout<<"man_a:         "<<std::bitset<32>(man_a)<<std::endl;
      std::cout<<"man_b:         "<<std::bitset<32>(man_b)<<std::endl;
      std::cout<<"result:        "<<std::bitset<32>(result)<<std::endl;
-
-     std::cout<<"resultFloat:   "<<*reinterpret_cast<float*>(&result)<<std::endl;
-     std::cout<<"floatFPU:      "<<a*b<<std::endl;*/
+     */
+    /*std::cout << "result:        " << std::bitset<32>(result) << std::endl;
+     std::cout << "float_result:  "
+     << std::bitset<32>(*reinterpret_cast<int*>(&float_score))
+     << std::endl;*/
     return result;
     }
